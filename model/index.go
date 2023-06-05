@@ -1,5 +1,13 @@
 package model
 
+/*
+Schema
+	id BIGSERIAL PRIMARY KEY ,
+	first_name VARCHAR(150),
+	last_name VARCHAR(150),
+	role JSON,
+	title VARCHAR(150)
+*/
 type User struct {
 	FirstName string   `json:"first_name"`
 	LastName  string   `json:"last_name"`
@@ -9,3 +17,11 @@ type User struct {
 type Error struct {
 	Message string `json:"message"`
 }
+
+var UserSchema = `
+CREATE TABLE userswithjob(id BIGSERIAL PRIMARY KEY ,
+	first_name VARCHAR(150),
+last_name VARCHAR(150),
+role JSON,
+title VARCHAR(150))
+`

@@ -4,18 +4,20 @@ import (
 	"database/sql"
 	"fmt"
 	checkerror "serverwithpostgres/checkError"
+
+	"github.com/jmoiron/sqlx"
 )
 
-var db *sql.DB
+var db *sqlx.DB
 var err error
 
 func ConnectDB() {
 	connStr := "user=nlab-7 dbname=nlab-7 password=nlab"
-	db, err = sql.Open("postgres", connStr)
+	db, err = sqlx.Open("postgres", connStr)
 	checkerror.CheckError(err)
 	fmt.Println("Connected")
 }
 
-func GiveDB() *sql.DB {
+func GiveDB() *sqlx.DB {
 	return db
 }
