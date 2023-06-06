@@ -18,4 +18,6 @@ func ApiHandler(e *echo.Echo) {
 	UserGroup.GET("/getuser/:id", userHandler.getUserbyId)
 	UserGroup.GET("/getuser", userHandler.getUsersbyQuery)
 	UserGroup.POST("/createuser/", userHandler.createUser)
+	UserGroup.PUT("/updateuser/:id", userHandler.updateUser)
+	UserGroup.DELETE("/deleteuser/:id", userHandler.deleteUser)
 }
