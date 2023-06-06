@@ -15,4 +15,7 @@ func ApiHandler(e *echo.Echo) {
 	})
 	UserGroup := e.Group("/users")
 	UserGroup.GET("/getusers", userHandler.getUsers)
+	UserGroup.GET("/getuser/:id", userHandler.getUserbyId)
+	UserGroup.GET("/getuser", userHandler.getUsersbyQuery)
+	UserGroup.POST("/createuser/", userHandler.createUser)
 }

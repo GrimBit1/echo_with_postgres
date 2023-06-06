@@ -1,7 +1,7 @@
 package connectdb
 
 import (
-	"database/sql"
+	_ "database/sql"
 	"fmt"
 	checkerror "serverwithpostgres/checkError"
 

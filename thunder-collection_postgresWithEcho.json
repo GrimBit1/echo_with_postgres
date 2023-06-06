@@ -1,0 +1,56 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "postgresWithEcho",
+    "dateExported": "2023-06-06T06:40:58.745Z",
+    "version": "1.1",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "be7c3865-1a08-47fe-9be1-0da0d8b297eb",
+            "colId": "454491c4-85f0-4157-bdc6-1a2dee25d904",
+            "containerId": "",
+            "name": "Get Users",
+            "url": "localhost:1323/users/getusers",
+            "method": "GET",
+            "sortNum": 10000,
+            "created": "2023-06-05T10:23:45.796Z",
+            "modified": "2023-06-05T11:12:15.166Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "da17650a-fb82-4395-bccc-629f8aac2065",
+            "colId": "454491c4-85f0-4157-bdc6-1a2dee25d904",
+            "containerId": "",
+            "name": "Get user by id",
+            "url": "localhost:1323/users/getuser/2",
+            "method": "GET",
+            "sortNum": 20000,
+            "created": "2023-06-06T05:06:00.141Z",
+            "modified": "2023-06-06T06:30:31.086Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "d5b42be4-5e4b-4301-b036-b854b51508cb",
+            "colId": "454491c4-85f0-4157-bdc6-1a2dee25d904",
+            "containerId": "",
+            "name": "Create User",
+            "url": "localhost:1323/users/createuser/",
+            "method": "POST",
+            "sortNum": 30000,
+            "created": "2023-06-06T05:25:23.477Z",
+            "modified": "2023-06-06T06:10:41.588Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"first_name\":\"Aditya\",\n  \"last_name\":\"Nandwana\",\n  \"role\":[\"Frontend\"],\n  \"title\":\"Web Developer\"\n}",
+                "form": []
+            },
+            "tests": []
+        }
+    ]
+}
