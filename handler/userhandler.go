@@ -69,12 +69,8 @@ func (userHandler) getUserbyId(c echo.Context, userdb connectdb.UserDB) error {
 
 }
 
-// Route 3 get user by query
-// func (userHandler) search(c echo.Context, userdb connectdb.UserDB) error {
 
-// }
-
-// Route 4 create user
+// Route 3 create user
 func (userHandler) createUser(c echo.Context, userdb connectdb.UserDB) error {
 
 	data, err := io.ReadAll(c.Request().Body)
@@ -95,7 +91,7 @@ func (userHandler) createUser(c echo.Context, userdb connectdb.UserDB) error {
 
 }
 
-// Route 5 Update user
+// Route 4 Update user
 func (userHandler) updateUser(c echo.Context, userdb connectdb.UserDB) error {
 	data, err := io.ReadAll(c.Request().Body)
 	if err != nil {
@@ -112,7 +108,7 @@ func (userHandler) updateUser(c echo.Context, userdb connectdb.UserDB) error {
 	return c.JSON(http.StatusOK, message)
 }
 
-// Route 6 Delete user
+// Route 5 Delete user
 func (userHandler) deleteUser(c echo.Context, userdb connectdb.UserDB) error {
 	num, err := strconv.ParseInt(c.Param("id"), 10, 64)
 
