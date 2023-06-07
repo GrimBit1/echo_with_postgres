@@ -13,7 +13,11 @@ var userDB = connectdb.UserDB{Name: "Hi", DBP: nil}
 
 func main() {
 	e := echo.New()
-
+	
+	err := userDB.ConnectDB()
+	if err != nil {
+		userDB.CloseDB()
+	}
 	handler.ApiHandler(e, userDB)
 
 	e.Logger.Fatal(e.Start(":1323"))

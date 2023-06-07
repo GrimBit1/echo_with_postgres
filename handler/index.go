@@ -11,10 +11,7 @@ import (
 var UserHandler = userHandler{"UserHandler"}
 
 func ApiHandler(e *echo.Echo, userDB connectdb.UserDB) {
-	err := userDB.ConnectDB()
-	if err != nil {
-		userDB.CloseDB()
-	}
+	
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
