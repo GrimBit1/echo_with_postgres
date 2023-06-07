@@ -1,7 +1,7 @@
 {
     "client": "Thunder Client",
     "collectionName": "postgresWithEcho",
-    "dateExported": "2023-06-06T06:40:58.745Z",
+    "dateExported": "2023-06-07T08:12:29.051Z",
     "version": "1.1",
     "folders": [],
     "requests": [
@@ -12,9 +12,9 @@
             "name": "Get Users",
             "url": "localhost:1323/users/getusers",
             "method": "GET",
-            "sortNum": 10000,
+            "sortNum": 25000,
             "created": "2023-06-05T10:23:45.796Z",
-            "modified": "2023-06-05T11:12:15.166Z",
+            "modified": "2023-06-06T09:35:46.350Z",
             "headers": [],
             "params": [],
             "tests": []
@@ -23,12 +23,12 @@
             "_id": "da17650a-fb82-4395-bccc-629f8aac2065",
             "colId": "454491c4-85f0-4157-bdc6-1a2dee25d904",
             "containerId": "",
-            "name": "Get user by id",
-            "url": "localhost:1323/users/getuser/2",
+            "name": "Get User by id",
+            "url": "localhost:1323/users/getuser/4",
             "method": "GET",
-            "sortNum": 20000,
+            "sortNum": 27500,
             "created": "2023-06-06T05:06:00.141Z",
-            "modified": "2023-06-06T06:30:31.086Z",
+            "modified": "2023-06-06T09:46:02.777Z",
             "headers": [],
             "params": [],
             "tests": []
@@ -42,12 +42,89 @@
             "method": "POST",
             "sortNum": 30000,
             "created": "2023-06-06T05:25:23.477Z",
-            "modified": "2023-06-06T06:10:41.588Z",
+            "modified": "2023-06-07T07:19:53.410Z",
             "headers": [],
             "params": [],
             "body": {
                 "type": "json",
-                "raw": "{\n  \"first_name\":\"Aditya\",\n  \"last_name\":\"Nandwana\",\n  \"role\":[\"Frontend\"],\n  \"title\":\"Web Developer\"\n}",
+                "raw": "{\n  \"first_name\":\"Aditya\",\n  \"last_name\":\"Nandwana\",\n  \"role\":[\"Frontend\", \"Project Manager\"],\n  \"title\":\"Web Developer\"\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "535d64eb-5e12-43bb-a3d7-c17dbdc2c6b5",
+            "colId": "454491c4-85f0-4157-bdc6-1a2dee25d904",
+            "containerId": "",
+            "name": "Get User by query",
+            "url": "localhost:1323/users/search?first_name=(select max(id) from userswithjob)",
+            "method": "GET",
+            "sortNum": 40000,
+            "created": "2023-06-06T07:03:38.727Z",
+            "modified": "2023-06-07T07:44:19.720Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "first_name",
+                    "value": "Aditya",
+                    "isDisabled": true,
+                    "isPath": false
+                },
+                {
+                    "name": "last_name",
+                    "value": "Nandwana",
+                    "isDisabled": true,
+                    "isPath": false
+                },
+                {
+                    "name": "first_name",
+                    "value": "(select max(id) from userswithjob)",
+                    "isPath": false
+                },
+                {
+                    "name": "title",
+                    "value": "Full Stack Developer",
+                    "isDisabled": true,
+                    "isPath": false
+                },
+                {
+                    "name": "role",
+                    "value": "Frontend",
+                    "isDisabled": true,
+                    "isPath": false
+                }
+            ],
+            "tests": []
+        },
+        {
+            "_id": "c467f353-1d4f-464d-a25b-ade866c7822a",
+            "colId": "454491c4-85f0-4157-bdc6-1a2dee25d904",
+            "containerId": "",
+            "name": "Deleteuser",
+            "url": "localhost:1323/users/deleteuser/3",
+            "method": "DELETE",
+            "sortNum": 50000,
+            "created": "2023-06-06T09:35:58.677Z",
+            "modified": "2023-06-06T09:43:25.975Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "92369d90-a195-476a-a0f0-4dad40207d89",
+            "colId": "454491c4-85f0-4157-bdc6-1a2dee25d904",
+            "containerId": "",
+            "name": "Update user",
+            "url": "localhost:1323/users/updateuser/4",
+            "method": "PUT",
+            "sortNum": 60000,
+            "created": "2023-06-06T10:42:23.056Z",
+            "modified": "2023-06-07T07:20:28.374Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"first_name\":\"Aditya\",\n  \"last_name\":\"Nandwana\",\n  \"role\":[\"Full Stack Developer-1\"],\n  \"title\":\"Full Stack Developer\"\n}",
                 "form": []
             },
             "tests": []

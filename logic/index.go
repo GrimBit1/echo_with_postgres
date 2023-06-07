@@ -5,44 +5,46 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 
 	// "fmt"
 
-	checkerror "serverwithpostgres/checkError"
-	"serverwithpostgres/connectdb"
 	"serverwithpostgres/model"
+
+	"github.com/jmoiron/sqlx"
 )
 
-var Users = []model.User{}
-var UserPointer = &Users
-
-// Route 1 Done Get All Users
-func GetAllUsers() {
-
-	res, err := connectdb.GiveDB().Query("Select * from userswithjob")
-
-	checkerror.CheckError(err)
-
-	var tempArr = []model.User{}
-	for res.Next() {
-
-		var newUser, err = makeUserFromDB(nil, res)
-
-		checkerror.CheckError(err)
-
-		tempArr = append(tempArr, newUser)
-
-	}
-	*UserPointer = tempArr
+type UserLogic struct {
 }
 
-func GetUser(id int64) (model.User, error) {
+// Route 1 Done Get All Users
+func (u *UserLogic) GetAllUsers(db *sqlx.DB) ([]model.User, error) {
 
-	res := connectdb.GiveDB().QueryRow(`select * from userswithjob where id =$1`, id)
+	res, err := db.Query("Select * from userswithjob")
+
+	if err != nil {
+		return []model.User{}, err
+	}
+
+	var Users = []model.User{}
+	for res.Next() {
+
+		var newUser, _ = u.makeUserFromDB(nil, res)
+
+		Users = append(Users, newUser)
+
+	}
+	return Users, nil
+}
+
+func (u *UserLogic) GetUser(id int64, db *sqlx.DB) (model.User, error) {
+
+	res := db.QueryRow(`select * from userswithjob where id =$1`, id)
 
 	// user, err := makeUserFromDB(res, nil)
 
-	user, err := makeUserFromDB(res, nil)
+	user, err := u.makeUserFromDB(res, nil)
 
 	if err != nil {
 		if err.Error() == `sql: no rows in result set` {
@@ -57,12 +59,14 @@ func GetUser(id int64) (model.User, error) {
 }
 
 // Function to create user
-func CreateUser(data []byte) (model.Error, error) {
+func (u *UserLogic) CreateUser(data []byte, db *sqlx.DB) (model.Error, error) {
 
 	var user = model.User{}
 
-	checkerror.CheckError(json.Unmarshal(data, &user))
-
+	err := json.Unmarshal(data, &user)
+	if err != nil {
+		return model.Error{}, err
+	}
 	// fmt.Printf("%#v\n", user)
 
 	if len(user.FirstName) == 0 {
@@ -77,30 +81,38 @@ func CreateUser(data []byte) (model.Error, error) {
 	}
 	temprole, err := json.Marshal(user.Role)
 
-	checkerror.CheckError(err)
+	if err != nil {
+		return model.Error{}, err
+	}
 
 	// fmt.Println(string(temprole))
 
-	res := connectdb.GiveDB().MustExec("INSERT INTO userswithjob(first_name,last_name,role,title) VALUES ($1,$2,$3,$4)", user.FirstName, user.LastName, temprole, user.JobTitle)
+	res := db.MustExec("INSERT INTO userswithjob(first_name,last_name,role,title) VALUES ($1,$2,$3,$4)", user.FirstName, user.LastName, temprole, user.JobTitle)
 
-	var rowChanged, err2 = res.RowsAffected()
+	rowChanged, err := res.RowsAffected()
 
-	checkerror.CheckError(err2)
+	if err != nil {
+		return model.Error{}, err
+	}
 
 	fmt.Println("id", rowChanged)
 
+	if rowChanged > 0 {
+
+		return model.Error{Message: "User Created Successfully"}, nil
+	}
 	// var id int64
 
 	// fmt.Println(newUser)
+	return model.Error{}, errors.New("Something went wrong")
 
-	return model.Error{Message: "User Created Successfully"}, nil
 }
 
 // Function to update user in db
-func UpdateUser(data []byte, id int64) (model.Error, error) {
+func (u *UserLogic) UpdateUser(data []byte, id int64, db *sqlx.DB) (model.Error, error) {
 	// Check the db that the id exists or not
-	var res = connectdb.GiveDB().QueryRow("Select * from userswithjob where id = $1", id)
-	oldUser, err := makeUserFromDB(res, nil)
+	var res = db.QueryRow("Select * from userswithjob where id = $1", id)
+	oldUser, err := u.makeUserFromDB(res, nil)
 	if err != nil {
 		if err.Error() == `sql: no rows in result set` {
 
@@ -114,7 +126,11 @@ func UpdateUser(data []byte, id int64) (model.Error, error) {
 	//Create user tempalate to update old one
 	var newUser = model.User{}
 
-	checkerror.CheckError(json.Unmarshal(data, &newUser))
+	err = json.Unmarshal(data, &newUser)
+
+	if err != nil {
+		return model.Error{}, err
+	}
 
 	//Check if newUser has provided the firstname and lastname
 	if len(newUser.FirstName) != 0 {
@@ -132,13 +148,18 @@ func UpdateUser(data []byte, id int64) (model.Error, error) {
 	if len(newUser.JobTitle) != 0 {
 		oldUser.JobTitle = newUser.JobTitle
 	}
-	fmt.Println(oldUser)
+	// fmt.Println(oldUser)
 	// Update the user in db
 	var temprole, err1 = json.Marshal(oldUser.Role)
-	checkerror.CheckError(err1)
-	result := connectdb.GiveDB().MustExec(`Update userswithjob set first_name = $1 ,last_name=$2 ,role=$3 ,title=$4 where id = $5`, oldUser.FirstName, oldUser.LastName, temprole, oldUser.JobTitle,id)
+	if err1 != nil {
+		return model.Error{}, err1
+	}
+
+	result := db.MustExec(`Update userswithjob set first_name = $1 ,last_name=$2 ,role=$3 ,title=$4 where id = $5`, oldUser.FirstName, oldUser.LastName, temprole, oldUser.JobTitle, id)
 	var rowChanged, err2 = result.RowsAffected()
-	checkerror.CheckError(err2)
+	if err2 != nil {
+		return model.Error{}, err
+	}
 	if rowChanged > 0 {
 
 		return model.Error{Message: "Updated Successfully"}, nil
@@ -148,11 +169,15 @@ func UpdateUser(data []byte, id int64) (model.Error, error) {
 }
 
 // Function to delete user from db
-func DeleteUser(id int64) (model.Error, error) {
-	res := connectdb.GiveDB().MustExec(`Delete from userswithjob where id = $1`, id)
+func (u *UserLogic) DeleteUser(id int64, db *sqlx.DB) (model.Error, error) {
+	res := db.MustExec(`Delete from userswithjob where id = $1`, id)
 	// fmt.Println(res)
 	rowChanged, err := res.RowsAffected()
-	fmt.Println(err)
+	
+	if err != nil {
+		return model.Error{}, errors.New("Something went wrong")
+
+	}
 	if rowChanged > 0 {
 
 		return model.Error{Message: "User Deleted Successfully"}, nil
@@ -161,12 +186,58 @@ func DeleteUser(id int64) (model.Error, error) {
 
 }
 
-func GetUsersbyQuery()  {
-	
+func (u *UserLogic) GetUsersbyQuery(myurl url.Values, db *sqlx.DB) ([]model.User, error) {
+
+	// If user has given the role in the query
+	var queryStrForRole string
+	if myurl.Has("role") {
+		roleArr := strings.Split(myurl.Get("role"), ",")
+		if len(roleArr) > 1 {
+			return []model.User{}, errors.New("Only 1 value for role is available at this moment ")
+		}
+		if len(roleArr) == 1 {
+			queryStrForRole = "role::varchar like '%" + roleArr[0] + "%'"
+			myurl.Del("role")
+		}
+	}
+
+	// If user has given other parameters in the query
+	var queryStr string
+	if len(myurl) != 0 {
+		if len(queryStrForRole) != 0 {
+			queryStrForRole = " AND " + queryStrForRole
+		}
+		querys := UrlValuesToString(myurl, " Like ", "'", "%")
+		queryStr = JoinArray(querys, " AND ")
+	}
+	// fmt.Println(queryStr)
+	// Making a main query string using all the query parameter
+	queryStrMain := "Select * from userswithjob where " + queryStr + queryStrForRole
+	// fmt.Println(queryStrMain)
+	res, err := db.Query(queryStrMain)
+
+	// If got error from the db then push it as error
+	if err != nil {
+		return nil, errors.New("Query Parameter is wrong" + strings.Split(err.Error(), ":")[1])
+	}
+	var Users = []model.User{}
+
+	for res.Next() {
+		var newUser, err = u.makeUserFromDB(nil, res)
+		if err != nil {
+			return []model.User{}, err
+		}
+		Users = append(Users, newUser)
+	}
+	if err != nil {
+		return []model.User{}, err
+	}
+
+	return Users, nil
 }
 
 // Function to make user from db
-func makeUserFromDB(res *sql.Row, ress *sql.Rows) (model.User, error) {
+func (u *UserLogic) makeUserFromDB(res *sql.Row, ress *sql.Rows) (model.User, error) {
 
 	if res != nil {
 		var (
@@ -203,11 +274,15 @@ func makeUserFromDB(res *sql.Row, ress *sql.Rows) (model.User, error) {
 			title    string
 		)
 
-		checkerror.CheckError(ress.Scan(&id,
+		err := (ress.Scan(&id,
 			&f_name,
 			&l_name,
 			&temprole,
 			&title))
+
+		if err != nil {
+			return model.User{}, err
+		}
 
 		// fmt.Println(id,
 		// 	f_name,
@@ -216,10 +291,34 @@ func makeUserFromDB(res *sql.Row, ress *sql.Rows) (model.User, error) {
 		// 	title)
 
 		var role []string
-		checkerror.CheckError(json.Unmarshal([]byte(temprole), &role))
+		err = json.Unmarshal([]byte(temprole), &role)
+		if err != nil {
+			return model.User{}, err
+		}
 
 		var newUser = model.User{ID: id, FirstName: f_name, LastName: l_name, Role: role, JobTitle: title}
 		return newUser, nil
 	}
 
+}
+
+// First parameter is for slice and second is for join string
+func JoinArray(slc []string, str string) string {
+	var temp string = slc[0]
+
+	for i := 1; i < len(slc); i++ {
+		v := slc[i]
+		temp += str + v
+	}
+	return temp
+}
+
+// First parameter is for slice and second is for join map values and third if we want to give some focus with additional 4 string on map values
+func UrlValuesToString(slc url.Values, str string, str2 string, str3 string) []string {
+	var temp []string
+	for i := range slc {
+		tempstr := i + str + string(str2+str3+slc[i][0]+str3+str2)
+		temp = append(temp, tempstr)
+	}
+	return temp
 }
