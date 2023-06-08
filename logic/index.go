@@ -201,7 +201,7 @@ func (u *UserLogic) GetUsersbyQuery(queryStr string,queryStrForRole string) ([]m
 	// fmt.Println(queryStr)
 	// Making a main query string using all the query parameter
 	queryStrMain := "Select * from userswithjob where " + queryStr + queryStrForRole + " order by id asc"
-	fmt.Println(queryStrMain)
+	// fmt.Println(queryStrMain)
 	res, err := u.DB.Query(queryStrMain)
 
 	// If got error from the db then push it as error
