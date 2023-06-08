@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"serverwithpostgres/logic"
@@ -11,8 +12,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var Logic = logic.UserLogic{}
-
 type userHandler struct {
 	Name string
 	db   *sqlx.DB
@@ -20,6 +19,7 @@ type userHandler struct {
 
 // Route 1 get All users
 func (u *userHandler) getUsers(c echo.Context) error {
+	var Logic = logic.UserLogic{DB: u.db}
 
 	var id = c.QueryParams()
 	var pageNo int64
@@ -44,9 +44,10 @@ func (u *userHandler) getUsers(c echo.Context) error {
 		}
 		id.Del("page")
 	}
+	fmt.Println(id)
 	// If user hasn't given any query then give all users
 	if len(id) == 0 {
-		Users, err := Logic.GetAllUsers(u.db, pageNo, pageSize)
+		Users, err := Logic.GetAllUsers( pageNo, pageSize)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, model.Error{Message: err.Error()})
@@ -54,7 +55,7 @@ func (u *userHandler) getUsers(c echo.Context) error {
 		return c.JSON(http.StatusOK, Users)
 
 	} else {
-		Users, err := Logic.GetUsersbyQuery(id, u.db)
+		Users, err := Logic.GetUsersbyQuery(id)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
 		}
@@ -68,6 +69,7 @@ func (u *userHandler) getUsers(c echo.Context) error {
 
 // Route 2 get User by id
 func (u *userHandler) getUserbyId(c echo.Context) error {
+	var Logic = logic.UserLogic{DB: u.db}
 
 	num, err := strconv.ParseInt(c.Param("id"), 10, 64)
 
@@ -75,7 +77,7 @@ func (u *userHandler) getUserbyId(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, model.Error{Message: "id should be valid"})
 
 	}
-	user, err := Logic.GetUser(num, u.db)
+	user, err := Logic.GetUser(num)
 
 	if err != nil {
 		if err.Error() == "Not Found" {
@@ -93,6 +95,7 @@ func (u *userHandler) getUserbyId(c echo.Context) error {
 
 // Route 3 create user
 func (u *userHandler) createUser(c echo.Context) error {
+	var Logic = logic.UserLogic{DB: u.db}
 
 	data, err := io.ReadAll(c.Request().Body)
 
@@ -100,7 +103,7 @@ func (u *userHandler) createUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
 	}
 
-	message, err := Logic.CreateUser(data, u.db)
+	message, err := Logic.CreateUser(data)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
@@ -114,6 +117,8 @@ func (u *userHandler) createUser(c echo.Context) error {
 
 // Route 4 Update user
 func (u *userHandler) updateUser(c echo.Context) error {
+	var Logic = logic.UserLogic{DB: u.db}
+
 	data, err := io.ReadAll(c.Request().Body)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
@@ -122,7 +127,7 @@ func (u *userHandler) updateUser(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
 	}
-	message, err := Logic.UpdateUser(data, num, u.db)
+	message, err := Logic.UpdateUser(data, num)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
 	}
@@ -131,12 +136,14 @@ func (u *userHandler) updateUser(c echo.Context) error {
 
 // Route 5 Delete user
 func (u *userHandler) deleteUser(c echo.Context) error {
+	var Logic = logic.UserLogic{DB: u.db}
+
 	num, err := strconv.ParseInt(c.Param("id"), 10, 64)
 
 	if err != nil {
 		return c.JSON(http.StatusNotFound, model.Error{Message: "id should be valid"})
 	}
-	message, err := Logic.DeleteUser(num, u.db)
+	message, err := Logic.DeleteUser(num)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, model.Error{Message: err.Error()})
 	}

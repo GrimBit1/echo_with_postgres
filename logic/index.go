@@ -17,10 +17,11 @@ import (
 )
 
 type UserLogic struct {
+	DB *sqlx.DB
 }
 
 // Route 1 Done Get All Users
-func (u *UserLogic) GetAllUsers(db *sqlx.DB, pageNo int64, pageSize int64) ([]model.User, error) {
+func (u *UserLogic) GetAllUsers(pageNo int64, pageSize int64) ([]model.User, error) {
 	var pageQuery string
 	if pageSize == 0 {
 		pageSize = 10
@@ -30,7 +31,7 @@ func (u *UserLogic) GetAllUsers(db *sqlx.DB, pageNo int64, pageSize int64) ([]mo
 	}
 	mainQuery := "Select * from userswithjob " + pageQuery + " Order by id asc"
 	fmt.Println(mainQuery)
-	res, err := db.Query(mainQuery)
+	res, err := u.DB.Query(mainQuery)
 
 	if err != nil {
 		return []model.User{}, err
@@ -47,9 +48,9 @@ func (u *UserLogic) GetAllUsers(db *sqlx.DB, pageNo int64, pageSize int64) ([]mo
 	return Users, nil
 }
 
-func (u *UserLogic) GetUser(id int64, db *sqlx.DB) (model.User, error) {
+func (u *UserLogic) GetUser(id int64) (model.User, error) {
 
-	res := db.QueryRow(`select * from userswithjob where id =$1`, id)
+	res := u.DB.QueryRow(`select * from userswithjob where id =$1`, id)
 
 	// user, err := makeUserFromDB(res, nil)
 
@@ -68,7 +69,7 @@ func (u *UserLogic) GetUser(id int64, db *sqlx.DB) (model.User, error) {
 }
 
 // Function to create user
-func (u *UserLogic) CreateUser(data []byte, db *sqlx.DB) (model.Error, error) {
+func (u *UserLogic) CreateUser(data []byte) (model.Error, error) {
 
 	var user = model.User{}
 
@@ -96,7 +97,7 @@ func (u *UserLogic) CreateUser(data []byte, db *sqlx.DB) (model.Error, error) {
 
 	// fmt.Println(string(temprole))
 
-	res := db.MustExec("INSERT INTO userswithjob(first_name,last_name,role,title) VALUES ($1,$2,$3,$4)", user.FirstName, user.LastName, temprole, user.JobTitle)
+	res := u.DB.MustExec("INSERT INTO userswithjob(first_name,last_name,role,title) VALUES ($1,$2,$3,$4)", user.FirstName, user.LastName, temprole, user.JobTitle)
 
 	rowChanged, err := res.RowsAffected()
 
@@ -118,9 +119,9 @@ func (u *UserLogic) CreateUser(data []byte, db *sqlx.DB) (model.Error, error) {
 }
 
 // Function to update user in db
-func (u *UserLogic) UpdateUser(data []byte, id int64, db *sqlx.DB) (model.Error, error) {
+func (u *UserLogic) UpdateUser(data []byte, id int64) (model.Error, error) {
 	// Check the db that the id exists or not
-	var res = db.QueryRow("Select * from userswithjob where id = $1", id)
+	var res = u.DB.QueryRow("Select * from userswithjob where id = $1", id)
 	oldUser, err := u.makeUserFromDB(res, nil)
 	if err != nil {
 		if err.Error() == `sql: no rows in result set` {
@@ -164,7 +165,7 @@ func (u *UserLogic) UpdateUser(data []byte, id int64, db *sqlx.DB) (model.Error,
 		return model.Error{}, err1
 	}
 
-	result := db.MustExec(`Update userswithjob set first_name = $1 ,last_name=$2 ,role=$3 ,title=$4 where id = $5`, oldUser.FirstName, oldUser.LastName, temprole, oldUser.JobTitle, id)
+	result := u.DB.MustExec(`Update userswithjob set first_name = $1 ,last_name=$2 ,role=$3 ,title=$4 where id = $5`, oldUser.FirstName, oldUser.LastName, temprole, oldUser.JobTitle, id)
 	var rowChanged, err2 = result.RowsAffected()
 	if err2 != nil {
 		return model.Error{}, err
@@ -178,8 +179,8 @@ func (u *UserLogic) UpdateUser(data []byte, id int64, db *sqlx.DB) (model.Error,
 }
 
 // Function to delete user from db
-func (u *UserLogic) DeleteUser(id int64, db *sqlx.DB) (model.Error, error) {
-	res := db.MustExec(`Delete from userswithjob where id = $1`, id)
+func (u *UserLogic) DeleteUser(id int64) (model.Error, error) {
+	res := u.DB.MustExec(`Delete from userswithjob where id = $1`, id)
 	// fmt.Println(res)
 	rowChanged, err := res.RowsAffected()
 
@@ -195,7 +196,7 @@ func (u *UserLogic) DeleteUser(id int64, db *sqlx.DB) (model.Error, error) {
 
 }
 
-func (u *UserLogic) GetUsersbyQuery(myurl url.Values, db *sqlx.DB) ([]model.User, error) {
+func (u *UserLogic) GetUsersbyQuery(myurl url.Values) ([]model.User, error) {
 	// If user has given the role in the query
 	var queryStrForRole string
 	if myurl.Has("role") {
@@ -222,7 +223,7 @@ func (u *UserLogic) GetUsersbyQuery(myurl url.Values, db *sqlx.DB) ([]model.User
 	// Making a main query string using all the query parameter
 	queryStrMain := "Select * from userswithjob where " + queryStr + queryStrForRole + " order by id asc"
 	// fmt.Println(queryStrMain)
-	res, err := db.Query(queryStrMain)
+	res, err := u.DB.Query(queryStrMain)
 
 	// If got error from the db then push it as error
 	if err != nil {
