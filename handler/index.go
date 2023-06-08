@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"serverwithpostgres/connectdb"
+	"serverwithpostgres/logic"
 
 	_ "github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
@@ -10,7 +11,7 @@ import (
 
 
 func ApiHandler(e *echo.Echo,udb connectdb.UserDB) {
-	var UserHandler = userHandler{"UserHandler",udb.DBP}
+	var UserHandler = userHandler{"UserHandler",udb.DBP, logic.UserLogic{DB: udb.DBP}}
 	
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
