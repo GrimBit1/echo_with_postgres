@@ -30,7 +30,7 @@ func (u *UserLogic) GetAllUsers(pageNo int64, pageSize int64) ([]model.User, err
 		pageQuery = `where id between ` + strconv.FormatInt(pageNo*pageSize-pageSize+1, 10) + ` and ` + strconv.FormatInt((pageNo*pageSize), 10)
 	}
 	mainQuery := "Select * from userswithjob " + pageQuery + " Order by id asc"
-	fmt.Println(mainQuery)
+	// fmt.Println(mainQuery)
 	res, err := u.DB.Query(mainQuery)
 
 	if err != nil {

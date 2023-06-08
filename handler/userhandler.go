@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"serverwithpostgres/logic"
@@ -45,7 +44,7 @@ func (u *userHandler) getUsers(c echo.Context) error {
 		}
 		id.Del("page")
 	}
-	fmt.Println(id)
+	// fmt.Println(id)
 
 	// If user hasn't given any query then give all users
 	if len(id) == 0 {
