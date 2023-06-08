@@ -196,33 +196,12 @@ func (u *UserLogic) DeleteUser(id int64) (model.Error, error) {
 
 }
 
-func (u *UserLogic) GetUsersbyQuery(myurl url.Values) ([]model.User, error) {
-	// If user has given the role in the query
-	var queryStrForRole string
-	if myurl.Has("role") {
-		roleArr := strings.Split(myurl.Get("role"), ",")
-		if len(roleArr) > 1 {
-			return []model.User{}, errors.New("Only 1 value for role is available at this moment ")
-		}
-		if len(roleArr) == 1 {
-			queryStrForRole = "role::varchar ilike '%" + roleArr[0] + "%'"
-			myurl.Del("role")
-		}
-	}
-
-	// If user has given other parameters in the query
-	var queryStr string
-	if len(myurl) != 0 {
-		if len(queryStrForRole) != 0 {
-			queryStrForRole = " AND " + queryStrForRole
-		}
-		querys := UrlValuesToString(myurl, " iLike ", "'", "%")
-		queryStr = JoinArray(querys, " AND ")
-	}
+func (u *UserLogic) GetUsersbyQuery(queryStr string,queryStrForRole string) ([]model.User, error) {
+	
 	// fmt.Println(queryStr)
 	// Making a main query string using all the query parameter
 	queryStrMain := "Select * from userswithjob where " + queryStr + queryStrForRole + " order by id asc"
-	// fmt.Println(queryStrMain)
+	fmt.Println(queryStrMain)
 	res, err := u.DB.Query(queryStrMain)
 
 	// If got error from the db then push it as error
