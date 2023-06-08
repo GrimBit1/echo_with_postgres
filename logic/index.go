@@ -201,7 +201,7 @@ func (u *UserLogic) GetUsersbyQuery(queryStr string,queryStrForRole string) ([]m
 	// fmt.Println(queryStr)
 	// Making a main query string using all the query parameter
 	queryStrMain := "Select * from userswithjob where " + queryStr + queryStrForRole + " order by id asc"
-	// fmt.Println(queryStrMain)
+	fmt.Println(queryStrMain)
 	res, err := u.DB.Query(queryStrMain)
 
 	// If got error from the db then push it as error
@@ -301,11 +301,11 @@ func JoinArray(slc []string, str string) string {
 	return temp
 }
 
-// First parameter is for slice and second is for join map values and third if we want to give some focus with additional 4 string on map values
+// First parameter is for slice and second is for join map values and third if we want to give some focus with additional 4th and 5th string  on map values
 func UrlValuesToString(slc url.Values, str string, str2 string, str3 string) []string {
 	var temp []string
 	for i := range slc {
-		tempstr := i + str + string(str2+str3+slc[i][0]+str3+str2)
+		tempstr := i + str + string(str2+slc[i][0]+str3+str2)
 		temp = append(temp, tempstr)
 	}
 	return temp
