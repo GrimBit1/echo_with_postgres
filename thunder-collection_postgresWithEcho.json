@@ -1,7 +1,7 @@
 {
     "client": "Thunder Client",
     "collectionName": "postgresWithEcho",
-    "dateExported": "2023-06-07T11:03:40.529Z",
+    "dateExported": "2023-06-08T09:35:25.889Z",
     "version": "1.1",
     "folders": [],
     "requests": [
@@ -14,7 +14,7 @@
             "method": "GET",
             "sortNum": 25000,
             "created": "2023-06-05T10:23:45.796Z",
-            "modified": "2023-06-07T11:02:14.043Z",
+            "modified": "2023-06-08T09:34:44.513Z",
             "headers": [
                 {
                     "name": "Content-Type",
@@ -49,6 +49,24 @@
                     "value": "Frontend",
                     "isDisabled": true,
                     "isPath": false
+                },
+                {
+                    "name": "title",
+                    "value": "mi",
+                    "isDisabled": true,
+                    "isPath": false
+                },
+                {
+                    "name": "page",
+                    "value": "3",
+                    "isDisabled": true,
+                    "isPath": false
+                },
+                {
+                    "name": "pageSize",
+                    "value": "100",
+                    "isDisabled": true,
+                    "isPath": false
                 }
             ],
             "tests": []
@@ -58,11 +76,11 @@
             "colId": "454491c4-85f0-4157-bdc6-1a2dee25d904",
             "containerId": "",
             "name": "Get User by id",
-            "url": "localhost:1323/users/getuser/5",
+            "url": "localhost:1323/users/getuser/4",
             "method": "GET",
             "sortNum": 27500,
             "created": "2023-06-06T05:06:00.141Z",
-            "modified": "2023-06-07T09:57:50.441Z",
+            "modified": "2023-06-08T05:24:51.105Z",
             "headers": [
                 {
                     "name": "Content-Type",
@@ -101,11 +119,11 @@
             "colId": "454491c4-85f0-4157-bdc6-1a2dee25d904",
             "containerId": "",
             "name": "Deleteuser",
-            "url": "localhost:1323/users/deleteuser/1001",
+            "url": "localhost:1323/users/deleteuser/5",
             "method": "DELETE",
             "sortNum": 50000,
             "created": "2023-06-06T09:35:58.677Z",
-            "modified": "2023-06-07T10:42:06.849Z",
+            "modified": "2023-06-08T05:48:46.502Z",
             "headers": [
                 {
                     "name": "Content-Type",

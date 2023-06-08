@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	// "fmt"
@@ -19,9 +20,17 @@ type UserLogic struct {
 }
 
 // Route 1 Done Get All Users
-func (u *UserLogic) GetAllUsers(db *sqlx.DB) ([]model.User, error) {
-
-	res, err := db.Query("Select * from userswithjob")
+func (u *UserLogic) GetAllUsers(db *sqlx.DB, pageNo int64, pageSize int64) ([]model.User, error) {
+	var pageQuery string
+	if pageSize == 0 {
+		pageSize = 10
+	}
+	if pageNo > 0 {
+		pageQuery = `where id between ` + strconv.FormatInt(pageNo*pageSize-pageSize+1, 10) + ` and ` + strconv.FormatInt((pageNo*pageSize), 10)
+	}
+	mainQuery := "Select * from userswithjob " + pageQuery + " Order by id asc"
+	fmt.Println(mainQuery)
+	res, err := db.Query(mainQuery)
 
 	if err != nil {
 		return []model.User{}, err
@@ -173,7 +182,7 @@ func (u *UserLogic) DeleteUser(id int64, db *sqlx.DB) (model.Error, error) {
 	res := db.MustExec(`Delete from userswithjob where id = $1`, id)
 	// fmt.Println(res)
 	rowChanged, err := res.RowsAffected()
-	
+
 	if err != nil {
 		return model.Error{}, errors.New("Something went wrong")
 
@@ -187,7 +196,6 @@ func (u *UserLogic) DeleteUser(id int64, db *sqlx.DB) (model.Error, error) {
 }
 
 func (u *UserLogic) GetUsersbyQuery(myurl url.Values, db *sqlx.DB) ([]model.User, error) {
-
 	// If user has given the role in the query
 	var queryStrForRole string
 	if myurl.Has("role") {
@@ -196,7 +204,7 @@ func (u *UserLogic) GetUsersbyQuery(myurl url.Values, db *sqlx.DB) ([]model.User
 			return []model.User{}, errors.New("Only 1 value for role is available at this moment ")
 		}
 		if len(roleArr) == 1 {
-			queryStrForRole = "role::varchar like '%" + roleArr[0] + "%'"
+			queryStrForRole = "role::varchar ilike '%" + roleArr[0] + "%'"
 			myurl.Del("role")
 		}
 	}
@@ -207,12 +215,12 @@ func (u *UserLogic) GetUsersbyQuery(myurl url.Values, db *sqlx.DB) ([]model.User
 		if len(queryStrForRole) != 0 {
 			queryStrForRole = " AND " + queryStrForRole
 		}
-		querys := UrlValuesToString(myurl, " Like ", "'", "%")
+		querys := UrlValuesToString(myurl, " iLike ", "'", "%")
 		queryStr = JoinArray(querys, " AND ")
 	}
 	// fmt.Println(queryStr)
 	// Making a main query string using all the query parameter
-	queryStrMain := "Select * from userswithjob where " + queryStr + queryStrForRole
+	queryStrMain := "Select * from userswithjob where " + queryStr + queryStrForRole + " order by id asc"
 	// fmt.Println(queryStrMain)
 	res, err := db.Query(queryStrMain)
 

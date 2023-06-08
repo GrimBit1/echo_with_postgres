@@ -3,11 +3,11 @@ package handler
 import (
 	"io"
 	"net/http"
-	"serverwithpostgres/connectdb"
 	"serverwithpostgres/logic"
 	"serverwithpostgres/model"
 	"strconv"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 )
 
@@ -15,16 +15,38 @@ var Logic = logic.UserLogic{}
 
 type userHandler struct {
 	Name string
+	db   *sqlx.DB
 }
 
 // Route 1 get All users
-func (userHandler) getUsers(c echo.Context, userdb connectdb.UserDB) error {
+func (u *userHandler) getUsers(c echo.Context) error {
 
 	var id = c.QueryParams()
-	// fmt.Println(id)
+	var pageNo int64
+	var err error
+	var pageSize int64
+	//If user has given pageSize query
+	if id.Has("pageSize") {
+		//If user has given pageno query if not then
+		if !id.Has("page") {
+			pageNo = 1
+		}
+		pageSize, err = strconv.ParseInt(id.Get("pageSize"), 10, 64)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, model.Error{Message: "pageSize parameter is not valid"})
+		}
+		id.Del("pageSize")
+	}
+	if id.Has("page") {
+		pageNo, err = strconv.ParseInt(id.Get("page"), 10, 64)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, model.Error{Message: "page parameter is not valid"})
+		}
+		id.Del("page")
+	}
 	// If user hasn't given any query then give all users
 	if len(id) == 0 {
-		Users, err := Logic.GetAllUsers(userdb.DBP)
+		Users, err := Logic.GetAllUsers(u.db, pageNo, pageSize)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, model.Error{Message: err.Error()})
@@ -32,7 +54,7 @@ func (userHandler) getUsers(c echo.Context, userdb connectdb.UserDB) error {
 		return c.JSON(http.StatusOK, Users)
 
 	} else {
-		Users, err := Logic.GetUsersbyQuery(id, userdb.DBP)
+		Users, err := Logic.GetUsersbyQuery(id, u.db)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
 		}
@@ -45,7 +67,7 @@ func (userHandler) getUsers(c echo.Context, userdb connectdb.UserDB) error {
 }
 
 // Route 2 get User by id
-func (userHandler) getUserbyId(c echo.Context, userdb connectdb.UserDB) error {
+func (u *userHandler) getUserbyId(c echo.Context) error {
 
 	num, err := strconv.ParseInt(c.Param("id"), 10, 64)
 
@@ -53,7 +75,7 @@ func (userHandler) getUserbyId(c echo.Context, userdb connectdb.UserDB) error {
 		return c.JSON(http.StatusNotFound, model.Error{Message: "id should be valid"})
 
 	}
-	user, err := Logic.GetUser(num, userdb.DBP)
+	user, err := Logic.GetUser(num, u.db)
 
 	if err != nil {
 		if err.Error() == "Not Found" {
@@ -69,9 +91,8 @@ func (userHandler) getUserbyId(c echo.Context, userdb connectdb.UserDB) error {
 
 }
 
-
 // Route 3 create user
-func (userHandler) createUser(c echo.Context, userdb connectdb.UserDB) error {
+func (u *userHandler) createUser(c echo.Context) error {
 
 	data, err := io.ReadAll(c.Request().Body)
 
@@ -79,7 +100,7 @@ func (userHandler) createUser(c echo.Context, userdb connectdb.UserDB) error {
 		return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
 	}
 
-	message, err := Logic.CreateUser(data, userdb.DBP)
+	message, err := Logic.CreateUser(data, u.db)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
@@ -92,7 +113,7 @@ func (userHandler) createUser(c echo.Context, userdb connectdb.UserDB) error {
 }
 
 // Route 4 Update user
-func (userHandler) updateUser(c echo.Context, userdb connectdb.UserDB) error {
+func (u *userHandler) updateUser(c echo.Context) error {
 	data, err := io.ReadAll(c.Request().Body)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
@@ -101,7 +122,7 @@ func (userHandler) updateUser(c echo.Context, userdb connectdb.UserDB) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
 	}
-	message, err := Logic.UpdateUser(data, num, userdb.DBP)
+	message, err := Logic.UpdateUser(data, num, u.db)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
 	}
@@ -109,13 +130,13 @@ func (userHandler) updateUser(c echo.Context, userdb connectdb.UserDB) error {
 }
 
 // Route 5 Delete user
-func (userHandler) deleteUser(c echo.Context, userdb connectdb.UserDB) error {
+func (u *userHandler) deleteUser(c echo.Context) error {
 	num, err := strconv.ParseInt(c.Param("id"), 10, 64)
 
 	if err != nil {
 		return c.JSON(http.StatusNotFound, model.Error{Message: "id should be valid"})
 	}
-	message, err := Logic.DeleteUser(num, userdb.DBP)
+	message, err := Logic.DeleteUser(num, u.db)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, model.Error{Message: err.Error()})
 	}

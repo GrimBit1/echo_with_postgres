@@ -1,4 +1,4 @@
-1+1
+
 insert into userswithjob (id, first_name, last_name, role, title) values (1000+1, 'Rachele', 'Zimek', '["Frontend"]', 'Accountant I');
 insert into userswithjob (id, first_name, last_name, role, title) values (1000+2, 'Ashlen', 'Willcox', '["Frontend"]', 'VP Accounting');
 insert into userswithjob (id, first_name, last_name, role, title) values (1000+3, 'Gallagher', 'Wathen', '["Frontend"]', 'Software Engineer II');

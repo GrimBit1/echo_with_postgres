@@ -9,11 +9,10 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var userDB = connectdb.UserDB{Name: "Hi", DBP: nil}
-
 func main() {
+	userDB := connectdb.UserDB{Name: "Hi", DBP: nil}
 	e := echo.New()
-	
+
 	err := userDB.ConnectDB()
 	if err != nil {
 		userDB.CloseDB()
