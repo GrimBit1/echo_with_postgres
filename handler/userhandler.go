@@ -20,13 +20,14 @@ type userHandler struct {
 // Route 1 get All users
 func (u *userHandler) getUsers(c echo.Context) error {
 	var Logic = logic.UserLogic{DB: u.db}
-
 	var id = c.QueryParams()
 	var pageNo int64
 	var err error
 	var pageSize int64
+
 	//If user has given pageSize query
 	if id.Has("pageSize") {
+
 		//If user has given pageno query if not then
 		if !id.Has("page") {
 			pageNo = 1
@@ -45,9 +46,10 @@ func (u *userHandler) getUsers(c echo.Context) error {
 		id.Del("page")
 	}
 	fmt.Println(id)
+
 	// If user hasn't given any query then give all users
 	if len(id) == 0 {
-		Users, err := Logic.GetAllUsers( pageNo, pageSize)
+		Users, err := Logic.GetAllUsers(pageNo, pageSize)
 
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, model.Error{Message: err.Error()})
@@ -109,6 +111,7 @@ func (u *userHandler) createUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
 
 	}
+
 	// Logic.CreateUser()
 
 	return c.JSON(http.StatusOK, message)
