@@ -11,7 +11,7 @@ import (
 
 
 func ApiHandler(e *echo.Echo,udb connectdb.UserDB) {
-	var UserHandler = userHandler{"UserHandler",udb.DBP, logic.UserLogic{DB: udb.DBP}}
+	var UserHandler = userHandler{"UserHandler", logic.UserLogic{DB: udb.DBP}}
 	
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")

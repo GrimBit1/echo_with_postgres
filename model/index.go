@@ -10,11 +10,19 @@ Schema
 	title VARCHAR(150)
 */
 type User struct {
-	ID        int64    `json:"id"`
-	FirstName string   `json:"first_name"`
-	LastName  string   `json:"last_name"`
-	Role      []string `json:"role"`
-	JobTitle  string   `json:"title"`
+	ID        int64  `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Role      []int  `json:"role"`
+	JobTitle  string `json:"title"`
+}
+type UpdateUser struct {
+	ID         int64  `json:"id"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	AddRole    int    `json:"add_role"`
+	RemoveRole int    `json:"remove_role"`
+	JobTitle   string `json:"title"`
 }
 type Error struct {
 	Message string `json:"message"`

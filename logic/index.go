@@ -27,9 +27,9 @@ func (u *UserLogic) GetAllUsers(pageNo int64, pageSize int64) ([]model.User, err
 		pageSize = 10
 	}
 	if pageNo > 0 {
-		pageQuery = `where id between ` + strconv.FormatInt(pageNo*pageSize-pageSize+1, 10) + ` and ` + strconv.FormatInt((pageNo*pageSize), 10)
+		pageQuery = `Limit ` + strconv.FormatInt(pageSize, 10) + ` OFFSET ` + strconv.FormatInt((pageNo*pageSize)-pageSize, 10)
 	}
-	mainQuery := "Select * from userswithjob " + pageQuery + " Order by id asc"
+	mainQuery := "Select * from userswithjob " + " Order by id asc " + pageQuery
 	// fmt.Println(mainQuery)
 	res, err := u.DB.Query(mainQuery)
 
@@ -126,7 +126,7 @@ func (u *UserLogic) UpdateUser(data []byte, id int64) (model.Error, error) {
 	if err != nil {
 		if err.Error() == `sql: no rows in result set` {
 
-			return model.Error{}, errors.New("not found")
+			return model.Error{}, errors.New("Not Found")
 
 		} else {
 			return model.Error{}, err
@@ -134,10 +134,10 @@ func (u *UserLogic) UpdateUser(data []byte, id int64) (model.Error, error) {
 	}
 
 	//Create user tempalate to update old one
-	var newUser = model.User{}
+	var newUser = model.UpdateUser{}
 
 	err = json.Unmarshal(data, &newUser)
-
+	// fmt.Println(newUser)
 	if err != nil {
 		return model.Error{}, err
 	}
@@ -152,8 +152,15 @@ func (u *UserLogic) UpdateUser(data []byte, id int64) (model.Error, error) {
 
 		oldUser.LastName = newUser.LastName
 	}
-	if len(newUser.Role) != 0 {
-		oldUser.Role = append(oldUser.Role, newUser.Role...)
+	// fmt.Println(newUser.AddRole)
+	if newUser.AddRole != 0 {
+		oldUser.Role = append(oldUser.Role, newUser.AddRole)
+		// fmt.Println(oldUser)
+	}
+	if newUser.RemoveRole != 0 {
+		index := GiveIndex(oldUser.Role, newUser.RemoveRole)
+		// fmt.Println(index)
+		oldUser.Role = RemoveIndex(oldUser.Role, index)
 	}
 	if len(newUser.JobTitle) != 0 {
 		oldUser.JobTitle = newUser.JobTitle
@@ -196,10 +203,22 @@ func (u *UserLogic) DeleteUser(id int64) (model.Error, error) {
 
 }
 
-func (u *UserLogic) GetUsersbyQuery(queryStr string,queryStrForRole string) ([]model.User, error) {
-	
+func (u *UserLogic) GetUsersbyQuery(roleArr []int, queryStrForRole string, id url.Values) ([]model.User, error) {
+
 	// fmt.Println(queryStr)
 	// Making a main query string using all the query parameter
+	// fmt.Println(id)
+	if len(roleArr) == 1 {
+		queryStrForRole = "role::varchar ilike '%" + strconv.Itoa(roleArr[0]) + "%'"
+	}
+	var queryStr string
+	if len(id) > 0 {
+		if len(queryStrForRole) != 0 {
+			queryStrForRole = " AND " + queryStrForRole
+		}
+		querys := UrlValuesToString(id, " iLike ", "'", "%")
+		queryStr = JoinArray(querys, " AND ")
+	}
 	queryStrMain := "Select * from userswithjob where " + queryStr + queryStrForRole + " order by id asc"
 	fmt.Println(queryStrMain)
 	res, err := u.DB.Query(queryStrMain)
@@ -245,7 +264,7 @@ func (u *UserLogic) makeUserFromDB(res *sql.Row, ress *sql.Rows) (model.User, er
 		if err != nil {
 			return model.User{}, err
 		}
-		var role []string
+		var role []int
 		err1 := json.Unmarshal([]byte(temprole), &role)
 
 		if err1 != nil {
@@ -278,7 +297,7 @@ func (u *UserLogic) makeUserFromDB(res *sql.Row, ress *sql.Rows) (model.User, er
 		// 	temprole,
 		// 	title)
 
-		var role []string
+		var role []int
 		err = json.Unmarshal([]byte(temprole), &role)
 		if err != nil {
 			return model.User{}, err
@@ -309,4 +328,28 @@ func UrlValuesToString(slc url.Values, str string, str2 string, str3 string) []s
 		temp = append(temp, tempstr)
 	}
 	return temp
+}
+
+func GiveIndex(slc []int, integer int) int {
+	for i := range slc {
+		// fmt.Println(i)
+		if slc[i] == integer {
+			return i
+		}
+	}
+	return -1
+}
+func RemoveIndex(s []int, index int) []int {
+	return append(s[:index], s[index+1:]...)
+}
+func StringArrtoIntArr(slc []string) ([]int, error) {
+	tempArr := []int{}
+	for _, v := range slc {
+		strtoint, err := strconv.Atoi(v)
+		if err != nil {
+			return nil, err
+		}
+		tempArr = append(tempArr, strtoint)
+	}
+	return tempArr,nil
 }

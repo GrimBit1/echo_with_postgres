@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"serverwithpostgres/logic"
@@ -8,13 +9,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 )
 
 type userHandler struct {
 	Name      string
-	db        *sqlx.DB
 	userLogic logic.UserLogic
 }
 
@@ -60,28 +59,24 @@ func (u *userHandler) getUsers(c echo.Context) error {
 	} else {
 		// If user has given the role in the query
 		var queryStrForRole string
+		var roleArr []int
 		if id.Has("role") {
-			roleArr := strings.Split(id.Get("role"), ",")
+			roleArr, err = logic.StringArrtoIntArr(strings.Split(id.Get("role"), ","))
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
+			}
+
 			if len(roleArr) > 1 {
 				return c.JSON(http.StatusBadRequest, model.Error{Message: "Only 1 value for role is available at this moment "})
 
 			}
 			if len(roleArr) == 1 {
-				queryStrForRole = "role::varchar ilike '%" + roleArr[0] + "%'"
 				id.Del("role")
 			}
 		}
-
 		// If user has given other parameters in the query
-		var queryStr string
-		if len(id) != 0 {
-			if len(queryStrForRole) != 0 {
-				queryStrForRole = " AND " + queryStrForRole
-			}
-			querys := logic.UrlValuesToString(id, " iLike ", "'", "%")
-			queryStr = logic.JoinArray(querys, " AND ")
-		}
-		Users, err := u.userLogic.GetUsersbyQuery(queryStr, queryStrForRole)
+		fmt.Println(roleArr, queryStrForRole, id)
+		Users, err := u.userLogic.GetUsersbyQuery(roleArr, queryStrForRole, id)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
 		}
