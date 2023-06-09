@@ -9,17 +9,16 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func ApiHandler(e *echo.Echo, udb connectdb.UserDB) {
+	var UserHandler = userHandler{"UserHandler", logic.UserLogic{DB: udb.DBP,RoleMap: udb.RoleMap}}
 
-func ApiHandler(e *echo.Echo,udb connectdb.UserDB) {
-	var UserHandler = userHandler{"UserHandler", logic.UserLogic{DB: udb.DBP}}
-	
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
 	UserGroup := e.Group("/users")
 	UserGroup.GET("/getusers", UserHandler.getUsers)
 	UserGroup.GET("/getuser/:id", UserHandler.getUserbyId)
-	UserGroup.POST("/createuser/",  UserHandler.createUser)
+	UserGroup.POST("/createuser/", UserHandler.createUser)
 	UserGroup.PUT("/updateuser/:id", UserHandler.updateUser)
 	UserGroup.DELETE("/deleteuser/:id", UserHandler.deleteUser)
 }

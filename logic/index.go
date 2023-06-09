@@ -17,7 +17,8 @@ import (
 )
 
 type UserLogic struct {
-	DB *sqlx.DB
+	DB      *sqlx.DB
+	RoleMap map[int]string
 }
 
 // Route 1 Done Get All Users
@@ -105,7 +106,7 @@ func (u *UserLogic) CreateUser(data []byte) (model.Error, error) {
 		return model.Error{}, err
 	}
 
-	fmt.Println("id", rowChanged)
+	// fmt.Println("id", rowChanged)
 
 	if rowChanged > 0 {
 
@@ -133,13 +134,13 @@ func (u *UserLogic) UpdateUser(data []byte, id int64) (model.Error, error) {
 		}
 	}
 
-	//Create user tempalate to update old one
+	//Create user template to update old one
 	var newUser = model.UpdateUser{}
 
 	err = json.Unmarshal(data, &newUser)
 	// fmt.Println(newUser)
 	if err != nil {
-		return model.Error{}, err
+		return model.Error{}, errors.New("Invalid Json Values")
 	}
 
 	//Check if newUser has provided the firstname and lastname
@@ -154,11 +155,18 @@ func (u *UserLogic) UpdateUser(data []byte, id int64) (model.Error, error) {
 	}
 	// fmt.Println(newUser.AddRole)
 	if newUser.AddRole != 0 {
-		oldUser.Role = append(oldUser.Role, newUser.AddRole)
-		// fmt.Println(oldUser)
+		index := GiveIndex(oldUser.Role, u.RoleMap[newUser.AddRole])
+		fmt.Println(index)
+		if index > -1 {
+			return model.Error{}, errors.New("The Given role is already available in the user")
+		}
+		oldUser.Role = append(oldUser.Role, u.RoleMap[newUser.AddRole])
 	}
 	if newUser.RemoveRole != 0 {
-		index := GiveIndex(oldUser.Role, newUser.RemoveRole)
+		index := GiveIndex(oldUser.Role, u.RoleMap[newUser.AddRole])
+		if index < 0 {
+			return model.Error{}, errors.New("The Given role is not available in the users")
+		}
 		// fmt.Println(index)
 		oldUser.Role = RemoveIndex(oldUser.Role, index)
 	}
@@ -167,9 +175,11 @@ func (u *UserLogic) UpdateUser(data []byte, id int64) (model.Error, error) {
 	}
 	// fmt.Println(oldUser)
 	// Update the user in db
-	var temprole, err1 = json.Marshal(oldUser.Role)
+	idRole := u.GiveIdFromRole(oldUser.Role)
+	fmt.Println(idRole)
+	var temprole, err1 = json.Marshal(idRole)
 	if err1 != nil {
-		return model.Error{}, err1
+		return model.Error{}, errors.New("Invalid Json Values")
 	}
 
 	result := u.DB.MustExec(`Update userswithjob set first_name = $1 ,last_name=$2 ,role=$3 ,title=$4 where id = $5`, oldUser.FirstName, oldUser.LastName, temprole, oldUser.JobTitle, id)
@@ -220,7 +230,7 @@ func (u *UserLogic) GetUsersbyQuery(roleArr []int, queryStrForRole string, id ur
 		queryStr = JoinArray(querys, " AND ")
 	}
 	queryStrMain := "Select * from userswithjob where " + queryStr + queryStrForRole + " order by id asc"
-	fmt.Println(queryStrMain)
+	// fmt.Println(queryStrMain)
 	res, err := u.DB.Query(queryStrMain)
 
 	// If got error from the db then push it as error
@@ -260,6 +270,11 @@ func (u *UserLogic) makeUserFromDB(res *sql.Row, ress *sql.Rows) (model.User, er
 			&l_name,
 			&temprole,
 			&title)
+		// fmt.Println(id,
+		// f_name,
+		// l_name,
+		// temprole,
+		// title)
 
 		if err != nil {
 			return model.User{}, err
@@ -270,7 +285,9 @@ func (u *UserLogic) makeUserFromDB(res *sql.Row, ress *sql.Rows) (model.User, er
 		if err1 != nil {
 			return model.User{}, err1
 		}
-		var newUser = model.User{ID: id, FirstName: f_name, LastName: l_name, Role: role, JobTitle: title}
+
+		roleArr := u.GiveRoleFromId(role)
+		var newUser = model.User{ID: id, FirstName: f_name, LastName: l_name, Role: roleArr, JobTitle: title}
 		return newUser, nil
 	} else {
 		var (
@@ -302,8 +319,9 @@ func (u *UserLogic) makeUserFromDB(res *sql.Row, ress *sql.Rows) (model.User, er
 		if err != nil {
 			return model.User{}, err
 		}
+		roleArr := u.GiveRoleFromId(role)
 
-		var newUser = model.User{ID: id, FirstName: f_name, LastName: l_name, Role: role, JobTitle: title}
+		var newUser = model.User{ID: id, FirstName: f_name, LastName: l_name, Role: roleArr, JobTitle: title}
 		return newUser, nil
 	}
 
@@ -330,7 +348,7 @@ func UrlValuesToString(slc url.Values, str string, str2 string, str3 string) []s
 	return temp
 }
 
-func GiveIndex(slc []int, integer int) int {
+func GiveIndex(slc []string, integer string) int {
 	for i := range slc {
 		// fmt.Println(i)
 		if slc[i] == integer {
@@ -339,7 +357,16 @@ func GiveIndex(slc []int, integer int) int {
 	}
 	return -1
 }
-func RemoveIndex(s []int, index int) []int {
+func GiveKey(slc map[int]string, integer string) int {
+	for i := range slc {
+		// fmt.Println(i)
+		if slc[i] == integer {
+			return i
+		}
+	}
+	return -1
+}
+func RemoveIndex(s []string, index int) []string {
 	return append(s[:index], s[index+1:]...)
 }
 func StringArrtoIntArr(slc []string) ([]int, error) {
@@ -351,5 +378,21 @@ func StringArrtoIntArr(slc []string) ([]int, error) {
 		}
 		tempArr = append(tempArr, strtoint)
 	}
-	return tempArr,nil
+	return tempArr, nil
+}
+
+func (u *UserLogic) GiveRoleFromId(intarr []int) []string {
+	roleArr := []string{}
+	for _, v := range intarr {
+		roleArr = append(roleArr, u.RoleMap[v])
+	}
+	return roleArr
+}
+func (u *UserLogic) GiveIdFromRole(intarr []string) []int {
+	idArr := []int{}
+	for _, v := range intarr {
+		index := GiveKey(u.RoleMap, v)
+		idArr = append(idArr, index)
+	}
+	return idArr
 }

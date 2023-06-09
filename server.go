@@ -10,12 +10,16 @@ import (
 )
 
 func main() {
-	userDB := connectdb.UserDB{Name: "Hi", DBP: nil}
+	userDB := connectdb.UserDB{Name: "Hi", DBP: nil, RoleMap: map[int]string{}}
 	e := echo.New()
 
 	err := userDB.ConnectDB()
 	if err != nil {
 		userDB.CloseDB()
+	}
+	err = userDB.FillRoleMap()
+	if err != nil {
+		panic(err)
 	}
 	handler.ApiHandler(e, userDB)
 

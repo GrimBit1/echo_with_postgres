@@ -8,8 +8,9 @@ import (
 )
 
 type UserDB struct {
-	Name string
-	DBP *sqlx.DB
+	Name    string
+	DBP     *sqlx.DB
+	RoleMap map[int]string
 }
 
 func (u *UserDB) ConnectDB() error {
@@ -25,4 +26,21 @@ func (u *UserDB) ConnectDB() error {
 
 func (u *UserDB) CloseDB() {
 	u.DBP.Close()
+}
+func (u *UserDB) FillRoleMap() error {
+	res, err := u.DBP.Query(`Select * from roles`)
+	if err != nil {
+		return err
+	}
+
+	for res.Next() {
+		var (
+			id   int
+			role string
+		)
+		res.Scan(&id, &role)
+		u.RoleMap[id] = role
+	}
+	// fmt.Println(u.RoleMap)
+	return nil
 }

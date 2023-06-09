@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"serverwithpostgres/logic"
@@ -75,7 +74,7 @@ func (u *userHandler) getUsers(c echo.Context) error {
 			}
 		}
 		// If user has given other parameters in the query
-		fmt.Println(roleArr, queryStrForRole, id)
+		// fmt.Println(roleArr, queryStrForRole, id)
 		Users, err := u.userLogic.GetUsersbyQuery(roleArr, queryStrForRole, id)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, model.Error{Message: err.Error()})
